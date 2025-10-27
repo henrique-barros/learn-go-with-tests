@@ -1,6 +1,7 @@
 package application
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -9,12 +10,20 @@ import (
 
 var ErrorNotFound = errors.New("player score not found")
 
+const jsonContentType = "application/json"
+
 type PlayerServer struct {
 	store PlayerStore
+	http.Handler
 }
 
 type InMemoryPlayerStore struct {
 	score map[string]int
+}
+
+type Player struct {
+	Name string
+	Wins int
 }
 
 func (i *InMemoryPlayerStore) GetPlayerScore(name string) (int, error) {
@@ -25,19 +34,36 @@ func (i *InMemoryPlayerStore) RecordWin(name string) {
 	i.score[name]++
 }
 
+func (i *InMemoryPlayerStore) GetLeague() []Player {
+	var league []Player
+	for name, wins := range i.score {
+		league = append(league, Player{
+			Name: name,
+			Wins: wins,
+		})
+	}
+	return league
+}
+
 type PlayerStore interface {
 	GetPlayerScore(name string) (int, error)
 	RecordWin(name string)
+	GetLeague() []Player
 }
 
-func (p *PlayerServer) ServeHTTP(response http.ResponseWriter, request *http.Request) {
-	player := strings.TrimPrefix(request.URL.Path, "/players/")
+func (p *PlayerServer) leagueHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("content-type", jsonContentType)
+	json.NewEncoder(w).Encode(p.store.GetLeague())
+}
 
-	switch request.Method {
+func (p *PlayerServer) playerHandler(w http.ResponseWriter, r *http.Request) {
+	player := strings.TrimPrefix(r.URL.Path, "/players/")
+
+	switch r.Method {
 	case http.MethodPost:
-		p.processWin(response, player)
+		p.processWin(w, player)
 	case http.MethodGet:
-		p.showScore(response, player)
+		p.showScore(w, player)
 	}
 }
 
@@ -73,9 +99,21 @@ func AddWin(player string) {
 }
 
 func NewPlayerServer(store PlayerStore) *PlayerServer {
-	return &PlayerServer{store}
+	p := new(PlayerServer)
+
+	p.store = store
+	router := http.NewServeMux()
+
+	router.Handle("/league", http.HandlerFunc(p.leagueHandler))
+
+	router.Handle("/players/", http.HandlerFunc(p.playerHandler))
+
+	p.Handler = router
+	return p
 }
 
 func NewInMemoryStore() *InMemoryPlayerStore {
-	return &InMemoryPlayerStore{make(map[string]int)}
+	return &InMemoryPlayerStore{
+		score: make(map[string]int),
+	}
 }
