@@ -8,6 +8,7 @@ import (
 )
 
 func main() {
-	handler := http.HandlerFunc(server.PlayerServer)
+	server := server.NewPlayerServer(server.NewInMemoryStore())
+	handler := http.HandlerFunc(server.ServeHTTP)
 	log.Fatal(http.ListenAndServe(":5000", handler))
 }
