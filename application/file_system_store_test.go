@@ -17,7 +17,7 @@ func TestFileSystemStore(t *testing.T) {
 
 		store, err := NewFileSystemStore(database)
 
-		assertNoError(t, err)
+		AssertNoError(t, err)
 
 		got := store.GetLeague()
 
@@ -26,7 +26,7 @@ func TestFileSystemStore(t *testing.T) {
 			{Name: "Cleo", Wins: 10},
 		}
 
-		assertLeague(t, got, want)
+		AssertLeague(t, got, want)
 	})
 
 	t.Run("get player score", func(t *testing.T) {
@@ -35,12 +35,12 @@ func TestFileSystemStore(t *testing.T) {
 
 		store, err := NewFileSystemStore(database)
 
-		assertNoError(t, err)
+		AssertNoError(t, err)
 
 		got, _ := store.GetPlayerScore("Chris")
 
 		want := 33
-		assertScoreEquals(t, want, got)
+		AssertScoreEquals(t, want, got)
 	})
 
 	t.Run("record wins for an existing player", func(t *testing.T) {
@@ -49,13 +49,13 @@ func TestFileSystemStore(t *testing.T) {
 
 		store, err := NewFileSystemStore(database)
 
-		assertNoError(t, err)
+		AssertNoError(t, err)
 
 		store.RecordWin("Chris")
 		got, _ := store.GetPlayerScore("Chris")
 		want := 34
 
-		assertScoreEquals(t, want, got)
+		AssertScoreEquals(t, want, got)
 	})
 
 	t.Run("record wins for new players", func(t *testing.T) {
@@ -64,13 +64,13 @@ func TestFileSystemStore(t *testing.T) {
 
 		store, err := NewFileSystemStore(database)
 
-		assertNoError(t, err)
+		AssertNoError(t, err)
 
 		store.RecordWin("John")
 		got, _ := store.GetPlayerScore("John")
 		want := 1
 
-		assertScoreEquals(t, want, got)
+		AssertScoreEquals(t, want, got)
 	})
 
 	t.Run("works with an empty file", func(t *testing.T) {
@@ -79,22 +79,8 @@ func TestFileSystemStore(t *testing.T) {
 
 		_, err := NewFileSystemStore(database)
 
-		assertNoError(t, err)
+		AssertNoError(t, err)
 	})
-}
-
-func assertScoreEquals(t testing.TB, got, want int) {
-	t.Helper()
-	if got != want {
-		t.Errorf("wanted score to be %d, got %d", want, got)
-	}
-}
-
-func assertNoError(t testing.TB, got error) {
-	t.Helper()
-	if got != nil {
-		t.Errorf("wasn't expecting error, got %v", got)
-	}
 }
 
 func createTempFile(t testing.TB, initialData string) (*os.File, func()) {

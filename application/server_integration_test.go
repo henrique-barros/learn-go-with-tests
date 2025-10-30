@@ -13,7 +13,7 @@ func TestRecordingWinsAndRetrievingThem(t *testing.T) {
 
 	store, err := NewFileSystemStore(database)
 
-	assertNoError(t, err)
+	AssertNoError(t, err)
 
 	server := NewPlayerServer(store)
 	player := "Pepper"
@@ -26,8 +26,8 @@ func TestRecordingWinsAndRetrievingThem(t *testing.T) {
 		response := httptest.NewRecorder()
 		server.ServeHTTP(response, newGetScoreRequest(player))
 
-		assertResponseStatus(t, response.Code, http.StatusOK)
-		assertResponseBody(t, response.Body.String(), "3")
+		AssertResponseStatus(t, response.Code, http.StatusOK)
+		AssertResponseBody(t, response.Body.String(), "3")
 	})
 
 	t.Run("get league", func(t *testing.T) {
@@ -43,7 +43,7 @@ func TestRecordingWinsAndRetrievingThem(t *testing.T) {
 			},
 		}
 
-		assertResponseStatus(t, response.Code, http.StatusOK)
-		assertLeague(t, got, want)
+		AssertResponseStatus(t, response.Code, http.StatusOK)
+		AssertLeague(t, got, want)
 	})
 }
