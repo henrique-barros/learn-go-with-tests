@@ -17,38 +17,15 @@ type PlayerServer struct {
 	http.Handler
 }
 
-type InMemoryPlayerStore struct {
-	score map[string]int
-}
-
 type Player struct {
 	Name string
 	Wins int
 }
 
-func (i *InMemoryPlayerStore) GetPlayerScore(name string) (int, error) {
-	return i.score[name], nil
-}
-
-func (i *InMemoryPlayerStore) RecordWin(name string) {
-	i.score[name]++
-}
-
-func (i *InMemoryPlayerStore) GetLeague() []Player {
-	var league []Player
-	for name, wins := range i.score {
-		league = append(league, Player{
-			Name: name,
-			Wins: wins,
-		})
-	}
-	return league
-}
-
 type PlayerStore interface {
 	GetPlayerScore(name string) (int, error)
 	RecordWin(name string)
-	GetLeague() []Player
+	GetLeague() League
 }
 
 func (p *PlayerServer) leagueHandler(w http.ResponseWriter, r *http.Request) {
@@ -82,18 +59,6 @@ func (p *PlayerServer) showScore(response http.ResponseWriter, player string) {
 	fmt.Fprint(response, playerScore)
 }
 
-func GetPlayerScore(player string) (int, error) {
-	if player == "Floyd" {
-		return 10, nil
-	}
-
-	if player == "Pepper" {
-		return 20, nil
-	}
-
-	return 0, ErrorNotFound
-}
-
 func AddWin(player string) {
 
 }
@@ -110,10 +75,4 @@ func NewPlayerServer(store PlayerStore) *PlayerServer {
 
 	p.Handler = router
 	return p
-}
-
-func NewInMemoryStore() *InMemoryPlayerStore {
-	return &InMemoryPlayerStore{
-		score: make(map[string]int),
-	}
 }
